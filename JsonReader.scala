@@ -1,15 +1,13 @@
 package com.example
 
-import org.apache.spark.SparkContext
-import org.apache.spark.SparkConf
-import org.json4s
+import org.apache.spark.{SparkConf, SparkContext}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
 
-case class WineItem(id: Option[Integer],
+case class WineItem(id: Option[Long],
                     country: Option[String],
-                    points: Option[Integer],
-                    price: Option[Number],
+                    points: Option[Long],
+                    price: Option[Double],
                     title: Option[String],
                     variety: Option[String],
                     winery: Option[String])
@@ -25,24 +23,23 @@ object JsonReader extends App {
     val filepath = args(0)
     val items = sc.textFile(filepath)
 
-    for (line <- items) {
+  def show_value(x: Any) = x match {
+    case Some(s) => s
+    case None => "N/A"
+  }
 
-      val json: json4s.JValue = parse(line)
-      val id: Integer = (json \ "id").extractOrElse(0)
-      val country: String = (json \ "country").extractOrElse("N/A")
-      val points: Integer = (json \ "points").extractOrElse(0)
-      val price: Integer = (json \ "price").extractOrElse(0)
-      val title: String = (json \ "title").extractOrElse("N/A")
-      val variety: String = (json \ "variety").extractOrElse("N/A")
-      val winery: String = (json \ "winery").extractOrElse("N/A")
-
-      println("id: " + id +
-        " | country: " + country +
-        " | points: " + points +
-        " | title: " + title +
-        " | variety: " + variety +
-        " | winery: " + winery)
+  for (line <- items) {
+      println(
+          "id: " + show_value(parse(line).extract[WineItem].id) +
+          " | country: " + show_value(parse(line).extract[WineItem].country) +
+          " | points: " + show_value(parse(line).extract[WineItem].points) +
+          " | price: " + show_value(parse(line).extract[WineItem].price) +
+          " | title: " + show_value(parse(line).extract[WineItem].title) +
+          " | variety: " + show_value(parse(line).extract[WineItem].variety) +
+          " | winery: " + show_value(parse(line).extract[WineItem].winery)
+      )
     }
+
     sc.stop()
 }
 
